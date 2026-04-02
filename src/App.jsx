@@ -1,74 +1,147 @@
-import AddRecipeForm from './components/AddRecipeForm'
-import RecipeList from './components/RecipeList'
-import { useRecipeManager } from './hooks/useRecipeManager'
+import { useState } from 'react'
 
 export default function App() {
-  const {
-    recipes,
-    filteredRecipes,
-    favoriteCount,
-    showFavoritesOnly,
-    setShowFavoritesOnly,
-    newRecipe,
-    editing,
-    handleNewRecipeName,
-    addIngredientRow,
-    removeIngredientRow,
-    updateNewIngredient,
-    addDirectionRow,
-    removeDirectionRow,
-    updateNewDirection,
-    addRecipe,
-    deleteRecipe,
-    toggleFavorite,
-    beginEditing,
-    cancelEditing,
-    saveRecipeName,
-    saveIngredientField,
-    saveDirectionText,
-  } = useRecipeManager()
+  const [todos, setTodos] = useState([])
+  const [input, setInput] = useState('')
+  const [editId, setEditId] = useState(null)
+  const [editText, setEditText] = useState('')
+
+  const addTodo = () => {
+    if (input.trim()) {
+      setTodos([...todos, { id: Date.now(), text: input, completed: false }])
+      setInput('')
+    }
+  }
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      addTodo()
+    }
+  }
+
+  const toggleTodo = (id) => {
+    setTodos(todos.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)))
+  }
+
+  const deleteTodo = (id) => {
+    setTodos(todos.filter((todo) => todo.id !== id))
+  }
+
+  const startEdit = (id, text) => {
+    setEditId(id)
+    setEditText(text)
+  }
+
+  const saveEdit = (id) => {
+    setTodos(todos.map((todo) => (todo.id === id ? { ...todo, text: editText } : todo)))
+    setEditId(null)
+  }
+
+  const cancelEdit = () => {
+    setEditId(null)
+  }
+
+  const clearCompleted = () => {
+    setTodos(todos.filter((todo) => !todo.completed))
+  }
+
+  const remainingCount = todos.filter((todo) => !todo.completed).length
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-lime-50 px-4 py-10 sm:px-6 lg:px-10">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-        <header className="rounded-3xl border border-orange-200 bg-white/85 p-6 shadow-lg backdrop-blur-sm sm:p-8">
-          <h1 className="text-3xl font-semibold tracking-tight text-orange-950 sm:text-4xl">
-            Recipe Box
-          </h1>
-          <p className="mt-2 text-orange-900/75">
-            Build and manage your recipes with ingredients, measurements, and step-by-step directions.
-          </p>
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-orange-950">
-            <span className="rounded-full bg-orange-100 px-3 py-1">{recipes.length} total recipes</span>
-            <span className="rounded-full bg-yellow-100 px-3 py-1">{favoriteCount} favorites</span>
-          </div>
-        </header>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="max-w-md bg-white p-6 rounded-lg shadow">
+        <h1 className="text-2xl font-bold mb-6">Todo App</h1>
 
-        <AddRecipeForm
-          newRecipe={newRecipe}
-          onNameChange={handleNewRecipeName}
-          onAddIngredient={addIngredientRow}
-          onRemoveIngredient={removeIngredientRow}
-          onIngredientChange={updateNewIngredient}
-          onAddDirection={addDirectionRow}
-          onRemoveDirection={removeDirectionRow}
-          onDirectionChange={updateNewDirection}
-          onSubmit={addRecipe}
-        />
+        <div className="flex gap-2 mb-6">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder="Add a todo..."
+            className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onClick={addTodo}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+          >
+            Add
+          </button>
+        </div>
 
-        <RecipeList
-          filteredRecipes={filteredRecipes}
-          showFavoritesOnly={showFavoritesOnly}
-          onToggleFavoritesOnly={() => setShowFavoritesOnly((prev) => !prev)}
-          editing={editing}
-          onBeginEditing={beginEditing}
-          onCancelEditing={cancelEditing}
-          onToggleFavorite={toggleFavorite}
-          onDeleteRecipe={deleteRecipe}
-          onSaveRecipeName={saveRecipeName}
-          onSaveIngredientField={saveIngredientField}
-          onSaveDirectionText={saveDirectionText}
-        />
+        <div className="mb-4 text-sm font-medium text-gray-600">
+          {remainingCount} todo{remainingCount !== 1 ? 's' : ''} left
+        </div>
+
+        <div className="space-y-2 mb-6">
+          {todos.map((todo) => (
+            <div
+              key={todo.id}
+              className="flex items-center gap-2 p-3 bg-gray-50 rounded hover:bg-gray-100 transition"
+            >
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => toggleTodo(todo.id)}
+                className="w-5 h-5 cursor-pointer"
+              />
+
+              {editId === todo.id ? (
+                <input
+                  type="text"
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  className="flex-1 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') saveEdit(todo.id)
+                    if (e.key === 'Escape') cancelEdit()
+                  }}
+                  autoFocus
+                />
+              ) : (
+                <span
+                  className={`flex-1 cursor-pointer ${todo.completed ? 'line-through text-gray-400' : ''}`}
+                  onClick={() => startEdit(todo.id, todo.text)}
+                >
+                  {todo.text}
+                </span>
+              )}
+
+              {editId === todo.id ? (
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => saveEdit(todo.id)}
+                    className="px-2 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600 transition"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="px-2 py-1 bg-gray-400 text-white text-sm rounded hover:bg-gray-500 transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => deleteTodo(todo.id)}
+                  className="px-2 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {todos.some((todo) => todo.completed) && (
+          <button
+            onClick={clearCompleted}
+            className="w-full px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition"
+          >
+            Clear completed todos
+          </button>
+        )}
       </div>
     </div>
   )

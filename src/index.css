@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
 body {
-  font-family: "Trebuchet MS", "Gill Sans", "Segoe UI", sans-serif;
-  background-image: radial-gradient(circle at 20% 20%, rgba(251, 191, 36, 0.12), transparent 40%),
-    radial-gradient(circle at 80% 10%, rgba(249, 115, 22, 0.1), transparent 45%);
+  font-family: system-ui, -apple-system, sans-serif;
 }
